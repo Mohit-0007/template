@@ -35,7 +35,7 @@ app.use((req,res)=>{
 // app.use((req,res,next)=>{
 //     res.status(500).render('pages/notfound',{title : "not found"})
 // })
-
+   
 // Use env PORT 
 const PORT = process.env.PORT;
 
