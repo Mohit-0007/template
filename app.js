@@ -25,7 +25,6 @@ app.set('views',path.join(__dirname,'views'));
 
 // Router 
 app.use('/',siteRouter);
-
 // Error handel
 app.use((req,res)=>{
     res.status(404).render('pages/notfound')

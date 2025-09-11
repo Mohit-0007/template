@@ -50,7 +50,8 @@ router.get('/widgets',controller.widgets);
 router.get('/wysiwyg',controller.wysiwyg);
 router.get('/x-editable',controller.x_editable);
 router.post('/followUp/add',controller.add);
-router.post('/login',controller.login);
+router.post('/Home',controller.login);
+router.get('/read-mails',controller.readEmails);
 
 
 //ajax

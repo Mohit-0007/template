@@ -1,9 +1,9 @@
-const { MongoClient, ObjectId, CURSOR_FLAGS } = require('mongodb');
+const { MongoClient, ObjectId} = require('mongodb');
+const readEmailsAndCreateTickets = require('../service/mailReader.service');
 const dotenv = require("dotenv");
 dotenv.config();
 const uri = process.env.URI;
 const client = new MongoClient(uri);
-
 
 // pages folder files
 async function renderFile(req, res, pageName, title) {
@@ -71,6 +71,17 @@ exports.widgets = (req, res) => renderFile(req, res, 'widgets', 'widgets');
 exports.wysiwyg = (req, res) => renderFile(req, res, 'wysiwyg', 'wysiwyg');
 exports.x_editable = (req, res) => renderFile(req, res, 'x-editable', 'x-editable');
 
+// mail test 
+exports.readEmails = async (req, res) => {
+  try {
+    const emails = await readEmailsAndCreateTickets();
+    console.log("All Emails:", emails);
+    res.json({ success: true, emails });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Error reading emails' });
+  }
+};
 
 //  login form function
 exports.login = async (req, res, next) => {
