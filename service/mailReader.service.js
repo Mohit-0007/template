@@ -9,8 +9,8 @@ function generateTicketId() {
 
   async function readEmailsAndCreateTickets() {
   const imap = new Imap({
-    user: '',         
-    password: '',         
+    user: 'unicmohit0001@gmail.com',         
+    password: 'ajtlwdtoifkuxqxa',         
     host: 'imap.gmail.com',
     port: 993,
     tls: true
