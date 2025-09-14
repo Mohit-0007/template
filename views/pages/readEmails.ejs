@@ -1,88 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <%- include('../partials/head') %>
-        <title>Leads</title>
+
+<head>
+    <%- include('../partials/head') %>
+        <title>
+            <%= title %>
+        </title>
         <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
         <script src="js/html5shiv.js"></script>
         <script src="js/respond.min.js"></script>
         <![endif]-->
-    </head>
+</head>
 
-    <body>
-<!-- Preloader -->
-<div id="preloader">
-    <div id="status"><i class="fa fa-spinner fa-spin"></i></div>
-</div>
+<body>
+    <!-- Preloader -->
+    <div id="preloader">
+        <div id="status"><i class="fa fa-spinner fa-spin"></i></div>
+    </div>
+    <section>
 
-        
-
-        <section>
-
-              <%- include('../partials/leftpanel') %>
+        <%- include('../partials/leftpanel') %>
 
             <div class="mainpanel">
 
-               <%- include('../partials/menu')%>
+                <%- include('../partials/menu')%>
 
-                <div class="pageheader">
-                    <h2><i class="fa fa-home"></i> lead Page <span>Subtitle goes here...</span></h2>
-                    <div class="breadcrumb-wrapper">
-                        <span class="label">You are here:</span>
-                        <ol class="breadcrumb">
-                            <li><a href=" /">Bracket</a></li>
-                            <li class="active">leads</li>
-                        </ol>
+                    <div class="pageheader">
+                        <h2><i class="fa fa-home"></i> Details </h2>
+                        <div class="breadcrumb-wrapper">
+                            <span class="label">You are here:</span>
+                            <ol class="breadcrumb">
+                                <li><a href="/">Bracket</a></li>
+                                <li class="active">Details</li>
+                            </ol>
+                        </div>
                     </div>
-                </div>
 
-                <div class="contentpanel">
-                    <!-- content goes here... -->
-                      <div class="row">
-        
-        <div class="col-md-12">
-          <h5 class="subtitle mb5">Table With Actions</h5>
-          <p class="mb20">An example of table with actions in every rows.</p>
-          <div class="table-responsive">
-          <table class="table mb30">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>TicketID</th>
-                <th>First Name</th>
-                <th>Last Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Password</th>
-                <th>AddOn</th>
-              </tr>
-            </thead>
-            <tbody>
-              
-             <% data.forEach(function(x,index){%>   
-              <tr>
-                <td><%=++index%></td>
-                <td><%= x.tckid%></td>
-                <td><%= x.FirstName %></td>
-                <td><%= x.LastName %></td>
-                <td><%= x.email%></td>
-                <td><%= x.phone%></td>
-                <td><%= x.password%></td>
-                <td><%= x.addon %></td>
-                <td class="table-action">
-                 <a href="/lead-details?id=<%= x._id %>"><i class="fa fa-pencil"></i></a>
-                </td>
-              </tr>
-              <% }) %>
-           
-           
-            </tbody>
-          </table>
-          </div><!-- table-responsive -->
-        </div><!-- col-md-6 -->
-              </div>
-                </div>
+                    <div class="contentpanel">
+                        <!-- content goes here... -->
+                        <div class="row">
+
+
+
+                            <!-- tabel follow up -->
+                            <div class="col-md-12 py-5">
+                                <h5 class="subtitle mb5">INFO</h5>
+                                <!-- <p class="mb20">An example of table with actions in every rows.</p> -->
+                                <div class="table-responsive">
+                                    <table class="table mb30">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Ticket ID</th>
+                                                <th>From</th>
+                                                <th>Subject</th>
+                                                <th>Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+
+                                            <% if (data && data.length> 0) { %>
+                                                <% data.forEach(function(x,i) { %>
+                                                    <tr>
+                                                        <td>
+                                                            <%=++i%>
+                                                        </td>
+                                                        <td>
+                                                            <%= x.ticket %>
+                                                        </td>
+                                                        <td>
+                                                            <%= x.from %>
+                                                        </td>
+                                                        <td>
+                                                            <%= x.subject %>
+                                                        </td>
+                                                        <td>
+                                                            <%= new Date(x.date).toLocaleString() %>
+                                                        </td>
+                                                    </tr>
+                                                    <% }) %>
+                                                        <% } else { %>
+                                                            <tr>
+                                                                <td colspan="4" style="text-align:center;">No Emails
+                                                                    Found</td>
+                                                            </tr>
+                                                            <% } %>
+
+                                        </tbody>
+                                    </table>
+                                </div><!-- table-responsive -->
+                            </div><!-- col-md-6 -->
+
+
+
+
+
+                        </div>
+                    </div>
 
             </div><!-- mainpanel -->
 
@@ -375,10 +390,11 @@
                 </div><!-- tab-content -->
             </div><!-- rightpanel -->
 
-             
 
-        </section>
-<%- include('../partials/js-common') %>
 
-    </body>
+    </section>
+    <%- include('../partials/js-common') %>
+
+</body>
+
 </html>

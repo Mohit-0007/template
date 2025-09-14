@@ -1,9 +1,9 @@
 const express=require('express');
 const router= express.Router();
 const controller= require('../controllers/site.controller');
-router.get('/',controller.signin);
+router.get('/',controller.home);
+router.get('/signin',controller.signin);
 router.get('/lead-details',controller.lead_details);
-router.get('/index',controller.home);
 router.get('/alerts',controller.alerts);
 router.get('/blank',controller.blank);
 router.get('/leads',controller.leads);
@@ -51,7 +51,9 @@ router.get('/wysiwyg',controller.wysiwyg);
 router.get('/x-editable',controller.x_editable);
 router.post('/followUp/add',controller.add);
 router.post('/Home',controller.login);
-router.get('/read-mails',controller.readEmails);
+router.get('/read-mails',controller.readEmails)
+router.get('/readMails',controller.readEmails)
+
 
 
 //ajax

@@ -1,5 +1,5 @@
 const { MongoClient, ObjectId} = require('mongodb');
-const readEmailsAndCreateTickets = require('../service/mailReader.service');
+const readEmailsinbox = require('../service/mailReader.service');
 const dotenv = require("dotenv");
 dotenv.config();
 const uri = process.env.URI;
@@ -16,7 +16,8 @@ async function renderFile(req, res, pageName, title) {
         const db = client.db('portfolio');
         const coll = db.collection('user');
         const result = await coll.find().toArray();
-        return res.render(`pages/${pageName}`, { title: title, data: result });
+        console.log(result)
+        return res.render(`pages/${pageName}`, { title: title, data: result});
     }
     return res.render(`pages/${pageName}`, { title: title })
 }
@@ -72,11 +73,25 @@ exports.wysiwyg = (req, res) => renderFile(req, res, 'wysiwyg', 'wysiwyg');
 exports.x_editable = (req, res) => renderFile(req, res, 'x-editable', 'x-editable');
 
 // mail test 
+// exports.readEmails = async (req, res) => {
+//   try {
+//     const emails = await readEmailsAndCreateTickets();
+//     // console.log("All Emails:", emails);
+//     console.log(emails)
+//     res.render('pages/rendom',{title:"rendom page",data:emails})
+//     // res.json({ success: true, emails });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ success: false, message: 'Error reading emails' });
+//   }
+// };
 exports.readEmails = async (req, res) => {
   try {
-    const emails = await readEmailsAndCreateTickets();
-    console.log("All Emails:", emails);
-    res.json({ success: true, emails });
+    const emails = await readEmailsinbox();
+    // console.log("All Emails:", emails);
+    console.log(emails)
+    res.render('pages/readEmails',{title:"rendom page",data:emails})
+    // res.json({ success: true, emails });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Error reading emails' });

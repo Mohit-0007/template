@@ -1,79 +1,93 @@
 const Imap = require('node-imap');
-const { simpleParser } = require('mailparser');
+const {simpleParser} = require('mailparser');
 const crypto = require('crypto');
-
-
-function generateTicketId() {
-  return 'TCK-' + Date.now() + '-' + crypto.randomBytes(2).toString('hex').toUpperCase();
+ 
+function ticketId(){
+return 'TIC'+'-'+crypto.randomBytes(2).toString('hex').toUpperCase()
 }
 
-  async function readEmailsAndCreateTickets() {
-  const imap = new Imap({
-    user: 'unicmohit0001@gmail.com',         
-    password: 'ajtlwdtoifkuxqxa',         
-    host: 'imap.gmail.com',
-    port: 993,
-    tls: true
-  });
-
-  function openInbox(cb) {
-    imap.openBox('INBOX', false, cb);
-  }
-
-  imap.once('ready', function () {
-    openInbox(function (err, box) {
-      if (err) throw err;
-
-      console.log('Reading unread emails');
-      imap.search(['UNSEEN'], function (err, results) {
-        if (err) throw err;
-        if (!results || results.length === 0) {
-          console.log('No new replies found.');
-          imap.end();
-          return;
-        }
-        const f = imap.fetch(results,{ bodies: '' });
-
-        f.on('message', function (msg,seqno) {
-          msg.on('body', function (stream) {
-            simpleParser(stream, async (err, parsed) => {
-              if (err) console.error(err);
-
-              // Extract email details
-              const from = parsed.from.text;
-              const subject = parsed.subject;
-              const body = parsed.text;
-
-              // Ticket ID nikalna 
-              let ticketIdMatch = subject.match(/\[Ticket ID: (.*?)\]/);
-              let ticketId = ticketIdMatch ? ticketIdMatch[1] : generateTicketId();
-
-              console.log('Ticket ID:', ticketId);
-              console.log('From:', from);
-              console.log('Subject:', subject);
-              console.log('Body:', body);
-         
-            });
-          });
-        });
-
-        f.once('error', function (err) {
-          console.log('Fetch error:'+ err);
-        });
-
-        f.once('end', function () {
-          console.log('Done reading all unread mails');
-          imap.end();
-        });
-      });
+function readEmailsinbox(){
+  return new Promise((resolve,reject)=>{
+    const imap =new Imap({
+       user: '',
+       password: '',
+       host:'imap.gmail.com',
+       port:993,
+       tls:true
     });
+
+// inboxOpen function
+
+function inboxOpen(res){
+  imap.openBox('INBOX',false,res)
+};
+
+// ready event and function run
+
+imap.on('ready',function(){
+     inboxOpen(function(err,box){
+    if(err){
+      reject(err);
+     };
+     imap.search(['ALL'],function(err,results){
+      if(err){
+        return reject(err)
+      };
+      if(!results||results.length===0){
+        imap.end();
+       return resolve([])
+      };
+      const data = imap.fetch(results,{bodies:''});
+      let email = [];
+      data.on('message',function(msg,err){
+           msg.on('body',function(stream){
+            simpleParser(stream,function(err,parsed){
+              if(err) return reject(err)
+                // console.log(parsed)    
+              
+                const from = parsed.from.text;
+                const subject = parsed.subject;
+                const body = parsed.body;
+                const date = parsed.date;
+ 
+                let ticketIdMatch = subject.match(/\[Ticket ID: (.*?)\]/);
+                let ticket = ticketIdMatch ? ticketIdMatch[1] : ticketId();
+
+                console.log(from)
+                console.log(subject)
+                // console.log(body)
+                console.log(date)
+
+                const obj={
+                  ticket,
+                  from,
+                  subject,
+                  date
+                }
+
+                email.push(obj);
+
+            })
+           })
+      })
+         data.on('error',function(err){
+          reject(err)
+         })
+         data.on('end',function(){
+          console.log('Done reading all unread mails')
+          imap.end();
+          resolve(email);
+         })
+     })
+     })
+})
+imap.once('error',function(err){
+       reject(err)
+})
+imap.connect()
   });
 
-  imap.once('error', function (err) {
-    console.log(err);
-  });
+  
+};
 
-  imap.connect();
-}
-
-module.exports = readEmailsAndCreateTickets;
+module.exports = readEmailsinbox;

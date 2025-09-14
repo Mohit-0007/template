@@ -101,16 +101,15 @@
                                     <form action="/followUp/add" method="post">
                                         <input type="hidden" name="id" value="<%= data._id %>">
                                         <div class="panel-body">
-                                             <% let date = new Date()%>
+                                        
                                                 <div class="col-lg-6">
-                                                    <input type="text" name="date" class="form-control" value="<%= date.toLocaleString()%>" placeholder="Auto add date&time" readonly/>
+                                                    <input type="datetime-local" name="date" class="form-control"  placeholder="date&time"/>
                                                 </div>
                                                   <div class="col-lg-6">
                                                     <input type="text" name="remark" placeholder="remark"
                                                         class="form-control" />
                                                 </div>
                                             </div><!-- row -->
-
                                           
                                             <!-- panel-body -->
 
