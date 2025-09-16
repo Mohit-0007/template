@@ -72,26 +72,14 @@ exports.widgets = (req, res) => renderFile(req, res, 'widgets', 'widgets');
 exports.wysiwyg = (req, res) => renderFile(req, res, 'wysiwyg', 'wysiwyg');
 exports.x_editable = (req, res) => renderFile(req, res, 'x-editable', 'x-editable');
 
-// mail test 
-// exports.readEmails = async (req, res) => {
-//   try {
-//     const emails = await readEmailsAndCreateTickets();
-//     // console.log("All Emails:", emails);
-//     console.log(emails)
-//     res.render('pages/rendom',{title:"rendom page",data:emails})
-//     // res.json({ success: true, emails });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ success: false, message: 'Error reading emails' });
-//   }
-// };
+
 exports.readEmails = async (req, res) => {
   try {
     const emails = await readEmailsinbox();
-    // console.log("All Emails:", emails);
+
     console.log(emails)
     res.render('pages/readEmails',{title:"rendom page",data:emails})
-    // res.json({ success: true, emails });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Error reading emails' });
@@ -125,13 +113,13 @@ exports.login = async (req, res, next) => {
 // lead_details page edit form and table
 exports.lead_details = async (req, res, next) => {
 try{
-    const objectid = ObjectId.createFromHexString(req.query.id);
+    const tic = req.query.id;
     await client.connect();
     await client.db('portfolio').command({ ping: 1 });
     console.log("success full connected")
     const db = client.db("portfolio");
     const mycoll = db.collection('user');
-    const result = await mycoll.findOne({ _id: objectid });
+    const result = await mycoll.findOne({ tckid:tic });
     return res.render('pages/lead-details', { title: "lead-details", data: result });
   }catch(next){
     next(error)
@@ -141,15 +129,16 @@ try{
 exports.add = async (req, res, next) => {
 try{
     const data = req.body;
-    const objectid = ObjectId.createFromHexString(data.id);
+    // const objectid = ObjectId.createFromHexString(data.id);
+    const tic = req.query.id;
     await client.connect();
     await client.db('portfolio').command({ ping: 1 });
     console.log("success full connected")
     const db = client.db("portfolio");
     mycoll = db.collection('user');
-    const dataupdate = await mycoll.updateOne({_id:objectid},{$push:{followUp:data}},{$upsert:true});
+    const dataupdate = await mycoll.updateOne({tckid:tic },{$push:{followUp:data}},{$upsert:true});
     console.log(dataupdate);
-    return res.redirect(`/lead-details?id=${objectid}`);
+    return res.redirect(`/lead-details?id=${tic}` );
   }catch(error){
     next(error)
 }}

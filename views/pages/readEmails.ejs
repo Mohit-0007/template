@@ -27,12 +27,12 @@
                 <%- include('../partials/menu')%>
 
                     <div class="pageheader">
-                        <h2><i class="fa fa-home"></i> Details </h2>
+                        <h2><i class="fa fa-home"></i> Client reply </h2>
                         <div class="breadcrumb-wrapper">
                             <span class="label">You are here:</span>
                             <ol class="breadcrumb">
                                 <li><a href="/">Bracket</a></li>
-                                <li class="active">Details</li>
+                                <li class="active">Mails</li>
                             </ol>
                         </div>
                     </div>
@@ -45,7 +45,7 @@
 
                             <!-- tabel follow up -->
                             <div class="col-md-12 py-5">
-                                <h5 class="subtitle mb5">INFO</h5>
+                                <h5 class="subtitle mb5">Mails</h5>
                                 <!-- <p class="mb20">An example of table with actions in every rows.</p> -->
                                 <div class="table-responsive">
                                     <table class="table mb30">
@@ -54,6 +54,7 @@
                                                 <th>#</th>
                                                 <th>Ticket ID</th>
                                                 <th>From</th>
+                                                <th>Body</th>
                                                 <th>Subject</th>
                                                 <th>Date</th>
                                             </tr>
@@ -71,6 +72,9 @@
                                                         </td>
                                                         <td>
                                                             <%= x.from %>
+                                                        </td>
+                                                        <td>
+                                                            <%= x.body %>
                                                         </td>
                                                         <td>
                                                             <%= x.subject %>

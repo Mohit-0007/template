@@ -1,93 +1,117 @@
 const Imap = require('node-imap');
-const {simpleParser} = require('mailparser');
-const crypto = require('crypto');
- 
-function ticketId(){
-return 'TIC'+'-'+crypto.randomBytes(2).toString('hex').toUpperCase()
-}
+const { simpleParser } = require('mailparser');
+const nodemailer = require('nodemailer');
+const { MongoClient } = require('mongodb');
 
-function readEmailsinbox(){
-  return new Promise((resolve,reject)=>{
-    const imap =new Imap({
-       user: '',
-       password: '',
-       host:'imap.gmail.com',
-       port:993,
-       tls:true
+const uri = process.env.URI;
+const client = new MongoClient(uri);
+
+function readEmailsinbox() {
+  return new Promise((resolve, reject) => {
+    const imap = new Imap({
+      user: 'unicmohit0001@gmail.com',
+      password: 'ajtlwdtoifkuxqxa',
+      host: 'imap.gmail.com',
+      port: 993,
+      tls: true,
     });
 
-// inboxOpen function
+    async function sendmail(emailaddress, name) {
+      try {
+        const transport = nodemailer.createTransport({
+          service: process.env.SMTP_SERVICE,
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+          },
+        });
 
-function inboxOpen(res){
-  imap.openBox('INBOX',false,res)
-};
+        await transport.sendMail({
+          from: 'unicmohit0001@gmail.com', 
+          to: emailaddress, 
+          subject: 'Thanks for contacting us!',
+          text: `Hi ${name}, We have received your inquiry. Our team will contact you shortly.`,
+        });
+      } catch (err) {
+        console.error('Error sending mail:', err);
+      }
+    }
 
-// ready event and function run
+    function inboxOpen(cb) {
+      imap.openBox('INBOX', false, cb);
+    }
 
-imap.on('ready',function(){
-     inboxOpen(function(err,box){
-    if(err){
-      reject(err);
-     };
-     imap.search(['ALL'],function(err,results){
-      if(err){
-        return reject(err)
-      };
-      if(!results||results.length===0){
-        imap.end();
-       return resolve([])
-      };
-      const data = imap.fetch(results,{bodies:''});
-      let email = [];
-      data.on('message',function(msg,err){
-           msg.on('body',function(stream){
-            simpleParser(stream,function(err,parsed){
-              if(err) return reject(err)
-                // console.log(parsed)    
-              
-                const from = parsed.from.text;
+    imap.on('ready', () => {
+      inboxOpen((err, box) => {
+       if (err)
+        {
+           return reject(err);
+        }
+
+        imap.search(['UNSEEN'], (err, results) => {
+       if(err)
+        { 
+          return reject(err);
+        }
+
+          if (!results || results.length === 0) {
+            imap.end();
+            return resolve([]);
+          }
+
+          const data = imap.fetch(results,{bodies:''});
+
+          data.on('message', (msg) => {
+            msg.on('body', async (stream) => {
+              try {
+                const parsed = await simpleParser(stream);
+
+                // MongoDB connect
+                 await client.connect();
+                 await client.db('portfolio').command({ping:1})
+                const mydb = client.db('portfolio');
+                const collection = mydb.collection('user');
+
+                const fromObj = parsed.from?.value?.[0] || {};
+                const from = fromObj.address;
+                const name = fromObj.name;
                 const subject = parsed.subject;
-                const body = parsed.body;
-                const date = parsed.date;
- 
-                let ticketIdMatch = subject.match(/\[Ticket ID: (.*?)\]/);
-                let ticket = ticketIdMatch ? ticketIdMatch[1] : ticketId();
+                const body = parsed.text || parsed.html;
 
-                console.log(from)
-                console.log(subject)
-                // console.log(body)
-                console.log(date)
+                // Send mail
+                await sendmail(from, name);
 
-                const obj={
-                  ticket,
-                  from,
-                  subject,
-                  date
+                // Update MongoDB
+                const result = await collection.findOne({email:from});
+                if (result) {
+                  const dataObj = {
+                    note: `New email received: ${subject}`,
+                    Body: body,
+                    date: new Date(),
+                    type: 'Email',
+                  };
+                  await collection.updateOne({email:from},{$push:{followUp:dataObj}},{upsert:true});
                 }
+              } catch(err){
+                console.error('Error processing email:', err);
+              }
+            });
+          });
 
-                email.push(obj);
+          data.on('error',(err)=>reject(err));
 
-            })
-           })
-      })
-         data.on('error',function(err){
-          reject(err)
-         })
-         data.on('end',function(){
-          console.log('Done reading all unread mails')
-          imap.end();
-          resolve(email);
-         })
-     })
-     })
-})
-imap.once('error',function(err){
-       reject(err)
-})
-imap.connect()
+          data.on('end',()=>{
+            console.log('Done reading all unread mails');
+            imap.end();
+            resolve(true);
+          });
+        });
+      });
+    });
+
+    imap.once('error', (err) => reject(err));
+    imap.connect();
   });
-
-  
-};
+}
 
 module.exports = readEmailsinbox;

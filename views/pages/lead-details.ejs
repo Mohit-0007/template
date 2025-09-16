@@ -98,8 +98,8 @@
                                         <h4 class="panel-title">Edit Details</h4>
                                     </div>
 
-                                    <form action="/followUp/add" method="post">
-                                        <input type="hidden" name="id" value="<%= data._id %>">
+                                    <form action="/followUp/add?id=<%= data.tckid %>" method="post">
+                                        <!-- <input type="hidden" name="id" value="<%= data.tckid %>"> -->
                                         <div class="panel-body">
                                         
                                                 <div class="col-lg-6">
