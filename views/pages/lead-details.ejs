@@ -68,7 +68,7 @@
                                                         <%= x.date%>
                                                     </td>
                                                     <td>
-                                                        <%= x.remark %>
+                                                        <%= x.remarks %>
                                                     </td>
                                                     <td class="table-action">
                                                         <!-- <a href="/followUp"><i class="fa fa-pencil"></i></a> -->
@@ -98,7 +98,7 @@
                                         <h4 class="panel-title">Edit Details</h4>
                                     </div>
 
-                                    <form action="/followUp/add?id=<%= data.tckid %>" method="post">
+                                    <form action="/followUp/add?id=<%= data._id %>" method="post">
                                         <!-- <input type="hidden" name="id" value="<%= data.tckid %>"> -->
                                         <div class="panel-body">
                                         

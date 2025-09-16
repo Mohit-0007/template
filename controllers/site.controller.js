@@ -83,10 +83,10 @@ async function read_mail() {
 
     // Map emails into a clean array
     return emails.map((email, i) => {
-      console.log('Date', email.Date)
-      console.log('From:', email.From);
-      console.log('Sender Subject:', email.Subject);
-      console.log('---------------------------');
+      // console.log('Date', email.Date)
+      // console.log('From:', email.From);
+      // console.log('Sender Subject:', email.Subject);
+      // console.log('---------------------------');
 
       return {
         Date: email.Date,
@@ -144,22 +144,33 @@ exports.lead_details = async (req, res, next) => {
 
     const objectid = ObjectId.createFromHexString(req.query.id);
     await client.connect();
-    await client.db('portfoliodb').command({ ping: 1 });
+    await client.db('portfolio').command({ ping: 1 });
     console.log("success full connected")
-    const db = client.db("portfoliodb");
+    const db = client.db("portfolio");
     const mycoll = db.collection('user');
+    const user = await mycoll.findOne({ _id: objectid });
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+
     const mail_data = await read_mail();
-    const senderSubject = mail_data.map((x) => ({
+    const userMails = mail_data.filter(
+      (x) => x.From?.toLowerCase() === user.email?.toLowerCase()
+    );
+    const senderSubject = userMails.map((x) => ({
       date: x.Date,
       remarks: x.Subject
     }))
-    await mycoll.updateOne(
-      { _id: objectid },
-      { $addToSet: { followup: { $each: senderSubject } } }, { returnDocument: "after" })
+
+    console.log(senderSubject);
+    if(senderSubject.length > 0){
+    await mycoll.updateOne({ _id: objectid },{$addToSet:{followUp:{$each:senderSubject}}},{$upsert:true})
+    }
+    
     const result = await mycoll.findOne({ _id: objectid });
     console.log('object result', result)
     console.log('mail_data', senderSubject)
-    return res.render('pages/lead-details', { title: "lead-details", data: result });
+    return res.render('pages/lead-details', {title:"lead-details", data: result });
   } catch (next) {
     next(error)
   }
@@ -171,16 +182,15 @@ exports.lead_details = async (req, res, next) => {
 exports.add = async (req, res, next) => {
 try{
     const data = req.body;
-    // const objectid = ObjectId.createFromHexString(data.id);
-    const tic = req.query.id;
+    const objectid = ObjectId.createFromHexString(data.id);
     await client.connect();
     await client.db('portfolio').command({ ping: 1 });
     console.log("success full connected")
     const db = client.db("portfolio");
     mycoll = db.collection('user');
-    const dataupdate = await mycoll.updateOne({tckid:tic },{$push:{followUp:data}},{$upsert:true});
+    const dataupdate = await mycoll.updateOne({id:objectid },{$push:{followUp:data}},{$upsert:true});
     console.log(dataupdate);
-    return res.redirect(`/lead-details?id=${tic}` );
+    return res.redirect(`/lead-details?id=${objectid}` );
   }catch(error){
     next(error)
 }}
