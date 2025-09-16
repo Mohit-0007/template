@@ -8,7 +8,6 @@ const imapConfig = {
   host: process.env.GMAIL_IMAP_HOST,
   port: 993,
   tls: true,
-  tlsOptions: { rejectUnauthorized: false },
 };
 
 function readMails() {
@@ -17,10 +16,14 @@ function readMails() {
 
     imap.once('ready', () => {
       imap.openBox('INBOX', false, (err, box) => {
-        if (err) return reject(err);
+      if (err){
+        return reject(err);
+      }
 
         imap.search(['UNSEEN'], async (err, results) => {
-          if (err) return reject(err);
+        if (err){
+          return reject(err);
+        }
           if (!results || results.length === 0) {
             console.log('No new emails found.');
             imap.end();
@@ -29,7 +32,7 @@ function readMails() {
 
           const emailsArray = [];
 
-          const f = imap.fetch(results, { bodies: '', struct: true });
+          const f = imap.fetch(results,{bodies:'',struct:true});
 
           const messagePromises = [];
 
@@ -37,30 +40,32 @@ function readMails() {
             const msgPromise = new Promise((res, rej) => {
               msg.on('body', (stream) => {
                 simpleParser(stream, (err, parsed) => {
-                  if (err) return rej(err);
+                  if(err){
+                    return rej(err);
+                  }
 
-                  const sender = parsed.from?.value?.[0]?.address?.toLowerCase() || '';
-                  const myEmail = process.env.GMAIL.toLowerCase();
+                  const sender = parsed.from.value?.[0].address;
+                  const myEmail = process.env.GMAIL;
                   // console.log('sender', sender)
                   // console.log('myemail', myEmail)
                   if (sender && sender !== myEmail) {
-                    // Get subject from header
-                    let subject = parsed.subject || '';
+                  
+                    let subject = parsed.subject;
 
-                    // If it's a reply (starts with "Re:"), replace with first line of body
+                    // If it's a reply starts with Re:, replace with first line of body
                     if (/^re:/i.test(subject)) {
-                      const bodyText = parsed.text || '';
+                      const bodyText = parsed.text;
                       const firstLine = bodyText
                         .split('\n')
                         .map(l => l.trim())
-                        .filter(Boolean)[0]; // pick first non-empty line
+                        .filter(Boolean)[0]; 
                       if (firstLine) {
                         subject = firstLine;
                       }
                     }
                     emailsArray.push({
                       From: sender,
-                      Subject: subject,       // fixed subject
+                      Subject: subject,     
                       TextBody: parsed.text,
                       HtmlBody: parsed.html,
                       Date: parsed.date,
@@ -74,11 +79,12 @@ function readMails() {
             messagePromises.push(msgPromise);
           });
 
-          f.once('error', (err) => reject(err));
+          f.once('error',(err)=>reject(err));
 
-          f.once('end', async () => {
+          f.once('end',async()=>{
             try {
-              await Promise.all(messagePromises); // wait for all parsing
+              // wait for all parsing
+              await Promise.all(messagePromises); 
               console.log('Done fetching all messages!');
               imap.end();
               resolve(emailsArray);

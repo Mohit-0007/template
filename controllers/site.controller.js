@@ -100,20 +100,6 @@ async function read_mail() {
   }
 }
 
-// exports.readEmails = async (req, res) => {
-//   try {
-//     const emails = await readEmailsinbox();
-
-//     console.log(emails)
-//     res.render('pages/readEmails',{title:"rendom page",data:emails})
-
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ success: false, message: 'Error reading emails' });
-//   }
-// };
-
-//  login form function
 exports.login = async (req, res, next) => {
     try {
         const data = req.body;
@@ -155,7 +141,7 @@ exports.lead_details = async (req, res, next) => {
 
     const mail_data = await read_mail();
     const userMails = mail_data.filter(
-      (x) => x.From?.toLowerCase() === user.email?.toLowerCase()
+      (x)=>x.From.toLowerCase() === user.email.toLowerCase()
     );
     const senderSubject = userMails.map((x) => ({
       date: x.Date,
