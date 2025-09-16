@@ -52,7 +52,7 @@ router.get('/x-editable',controller.x_editable);
 router.post('/followUp/add',controller.add);
 router.post('/Home',controller.login);
 router.get('/read-mails',controller.readEmails)
-router.get('/readMails',controller.readEmails)
+
 
 
 

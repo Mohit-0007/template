@@ -1,5 +1,5 @@
 const { MongoClient, ObjectId} = require('mongodb');
-const readEmailsinbox = require('../service/mailReader.service');
+const readMails = require('../service/mailReader.service');
 const dotenv = require("dotenv");
 dotenv.config();
 const uri = process.env.URI;
@@ -73,18 +73,45 @@ exports.wysiwyg = (req, res) => renderFile(req, res, 'wysiwyg', 'wysiwyg');
 exports.x_editable = (req, res) => renderFile(req, res, 'x-editable', 'x-editable');
 
 
-exports.readEmails = async (req, res) => {
+async function read_mail() {
   try {
-    const emails = await readEmailsinbox();
+    const emails = await readMails();
+    if (!emails.length) {
+      console.log('No emails from others.');
+      return [];
+    }
 
-    console.log(emails)
-    res.render('pages/readEmails',{title:"rendom page",data:emails})
+    // Map emails into a clean array
+    return emails.map((email, i) => {
+      console.log('Date', email.Date)
+      console.log('From:', email.From);
+      console.log('Sender Subject:', email.Subject);
+      console.log('---------------------------');
 
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Error reading emails' });
+      return {
+        Date: email.Date,
+        From: email.From,
+        Subject: email.Subject,
+      };
+    });
+  } catch (error) {
+    console.log(error);
+    return [];
   }
-};
+}
+
+// exports.readEmails = async (req, res) => {
+//   try {
+//     const emails = await readEmailsinbox();
+
+//     console.log(emails)
+//     res.render('pages/readEmails',{title:"rendom page",data:emails})
+
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ success: false, message: 'Error reading emails' });
+//   }
+// };
 
 //  login form function
 exports.login = async (req, res, next) => {
@@ -111,19 +138,34 @@ exports.login = async (req, res, next) => {
 }}
 
 // lead_details page edit form and table
+
 exports.lead_details = async (req, res, next) => {
-try{
-    const tic = req.query.id;
+  try {
+
+    const objectid = ObjectId.createFromHexString(req.query.id);
     await client.connect();
-    await client.db('portfolio').command({ ping: 1 });
+    await client.db('portfoliodb').command({ ping: 1 });
     console.log("success full connected")
-    const db = client.db("portfolio");
+    const db = client.db("portfoliodb");
     const mycoll = db.collection('user');
-    const result = await mycoll.findOne({ tckid:tic });
+    const mail_data = await read_mail();
+    const senderSubject = mail_data.map((x) => ({
+      date: x.Date,
+      remarks: x.Subject
+    }))
+    await mycoll.updateOne(
+      { _id: objectid },
+      { $addToSet: { followup: { $each: senderSubject } } }, { returnDocument: "after" })
+    const result = await mycoll.findOne({ _id: objectid });
+    console.log('object result', result)
+    console.log('mail_data', senderSubject)
     return res.render('pages/lead-details', { title: "lead-details", data: result });
-  }catch(next){
+  } catch (next) {
     next(error)
-}}
+  }
+}
+
+
 
 // add button to add table data
 exports.add = async (req, res, next) => {
