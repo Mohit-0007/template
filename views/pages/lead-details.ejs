@@ -54,30 +54,35 @@
                                                 <th>#</th>
                                                 <th>Date&Time</th>
                                                 <th>Remark</th>
+                                                <th>Attachments</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                           
-                                          <% if(data.followUp&& data.followUp.length > 0){%>    
-                                            <% data.followUp.forEach(function(x,index){%>
-                                                <tr>
-                                                    <td>
-                                                        <%=++index%>
-                                                    </td>
-                                                    <td>
-                                                        <%= x.date%>
-                                                    </td>
-                                                    <td>
-                                                        <%= x.remarks %>
-                                                    </td>
-                                                    <td class="table-action">
-                                                        <!-- <a href="/followUp"><i class="fa fa-pencil"></i></a> -->
-                                                        <!-- <a href="" class="delete-row"><i class="fa fa-trash-o"></i></a> -->
-                                                    </td>
-                                                </tr>
 
-                                                <% }) %>
-                                              <%}%>
+                                            <% if(data.followup&& data.followup.length> 0){%>
+                                                <% data.followup.forEach(function(x,index){%>
+                                                    <tr>
+                                                        <td>
+                                                            <%=++index%>
+                                                        </td>
+                                                        <td>
+                                                            <%= x.date%>
+                                                        </td>
+                                                        <td>
+                                                            <%= x.remarks %>
+                                                        </td>
+                                                        <td>
+                                                            <% if (x.attachments && x.attachments.length> 0) { %>
+                                                                <% x.attachments.forEach(att=> { %>
+                                                                    <a href="<%= att.url %>" target="_blank">
+                                                                        <%= att.filename %>
+                                                                    </a><br>
+                                                                    <% }) %>
+                                                                        <% }%> </td>
+                                                    </tr>
+
+                                                    <% }) %>
+                                                        <%}%>
 
 
 
@@ -101,17 +106,18 @@
                                     <form action="/followUp/add?id=<%= data._id %>" method="post">
                                         <!-- <input type="hidden" name="id" value="<%= data.tckid %>"> -->
                                         <div class="panel-body">
-                                        
-                                                <div class="col-lg-6">
-                                                    <input type="datetime-local" name="date" class="form-control"  placeholder="date&time"/>
-                                                </div>
-                                                  <div class="col-lg-6">
-                                                    <input type="text" name="remark" placeholder="remark"
-                                                        class="form-control" />
-                                                </div>
-                                            </div><!-- row -->
-                                          
-                                            <!-- panel-body -->
+
+                                            <div class="col-lg-6">
+                                                <input type="datetime-local" name="date" class="form-control"
+                                                    placeholder="date&time" />
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <input type="text" name="remark" placeholder="remark"
+                                                    class="form-control" />
+                                            </div>
+                                        </div><!-- row -->
+
+                                        <!-- panel-body -->
 
                                         <div class="panel-footer">
                                             <button type="submit" class="btn btn-primary">Add</button>

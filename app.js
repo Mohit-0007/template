@@ -25,6 +25,8 @@ app.set('views',path.join(__dirname,'views'));
 
 // Router 
 app.use('/',siteRouter);
+
+app.use("/uploads", express.static(path.join(process.cwd(),"uploads")));
 // Error handel
 app.use((req,res)=>{
     res.status(404).render('pages/notfound')
