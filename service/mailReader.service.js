@@ -1,7 +1,54 @@
 const Imap = require('imap');
 require('dotenv').config();
+const nodemailer = require('nodemailer')
 const { simpleParser } = require('mailparser');
+const { MongoClient } = require('mongodb');
+const uri = process.env.URI;
+const client = new MongoClient(uri);
 
+// Find user for mongodb
+async function monogoclient(Email) {
+  await client.connect()
+  await client.db('portfolio').command({ ping: 1 });
+  const mydb = client.db('portfolio');
+  const collection = mydb.collection('user');
+  return await collection.findOne({ email: Email })
+}
+
+// Auto send mail function
+function sendmail(email, name, ticketId) {
+  const transporter = nodemailer.createTransport({
+    service: process.env.SMTP_SERVICE,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    }
+  });
+
+  const message = {
+    from: process.env.SMTP_USER,
+    to: email,
+    subject: `We received your query:`,
+    text: `Hello ${name},
+
+We have received your inquiry.
+Your ticket ID is ${ticketId}.
+
+Our support team will get back to you shortly.
+
+Thanks,
+Support Team
+`
+  };
+
+  try {
+    transporter.sendMail(message)
+  } catch {
+    console.log('Email not send')
+  }
+
+}
+// Imap server connection
 const imapConfig = {
   user: process.env.GMAIL,
   password: process.env.GMAIL_PASSWORD,
@@ -19,7 +66,7 @@ function readMails() {
       imap.openBox('INBOX', false, (err, box) => {
         if (err) return reject(err);
 
-        imap.search(['ALL'], async (err, results) => {
+        imap.search(['UNSEEN'], async (err, results) => {
           if (err) return reject(err);
           if (!results || results.length === 0) {
             console.log('No new emails found.');
@@ -29,14 +76,14 @@ function readMails() {
 
           const emailsArray = [];
 
-          const f = imap.fetch(results,{ bodies:'',struct:true});
+          const f = imap.fetch(results, { bodies: '', struct: true, markSeen: true });
 
           const messagePromises = [];
 
           f.on('message', (msg) => {
             const msgPromise = new Promise((res, rej) => {
               msg.on('body', (stream) => {
-                simpleParser(stream, (err, parsed) => {
+                simpleParser(stream, async (err, parsed) => {
                   if (err) return rej(err);
 
                   const sender = parsed.from.value?.[0].address.toLowerCase();
@@ -51,23 +98,33 @@ function readMails() {
                     if (/^re:/i.test(subject)) {
                       const bodyText = parsed.text;
                       const firstLine = bodyText
-                      .split('\n')
-                      .map(l => l.trim())
-                      .filter(Boolean)[0]; // pick first non-empty line
+                        .split('\n')
+                        .map(l => l.trim())
+                        .filter(Boolean)[0]; // pick first non-empty line
                       if (firstLine) {
                         subject = firstLine;
                       }
                     }
-                   
+
                     emailsArray.push({
                       From: sender,
                       Subject: subject,       // fixed subject
                       TextBody: parsed.text,
                       HtmlBody: parsed.html,
                       Date: parsed.date,
-                      Attachments:parsed.attachments ||'no atattachmnt found',
+                      Attachments: parsed.attachments || 'no atattachmnt found',
                     });
                   }
+
+                  // mongoclient function call
+                  const userdata = await monogoclient(sender)
+                  console.log("userdata", userdata)
+                  const ticketId = userdata.tckid;
+                  const name = userdata.FirstName;
+                  // End mongoclient function call
+                  // Response mail  function
+                  await sendmail(sender, name, ticketId);
+                  //End Response mail  function
                   res();
                 });
               });

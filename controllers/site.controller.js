@@ -6,17 +6,21 @@ const uri = process.env.URI;
 const client = new MongoClient(uri);
 const fs = require('fs')
 const path = require('path')
-// pages folder files
-async function renderFile(req, res, pageName, title) {
 
-  // lead page data send 
-  if (pageName == 'leads') {
+// monngo connect
+async function monodbclient(){
     await client.connect();
     await client.db('portfolio').command({ ping: 1 });
-    console.log("success full connect");
     const db = client.db('portfolio');
-    const coll = db.collection('user');
-    const result = await coll.find().toArray();
+    return db.collection('user');
+}
+
+// pages folder files
+async function renderFile(req, res, pageName, title) {
+  // lead page data send 
+  if (pageName == 'leads') {
+    const clientData=await monodbclient()
+    const result = await clientData.find().toArray();
     return res.render(`pages/${pageName}`, { title: title, data: result });
   }
   return res.render(`pages/${pageName}`, { title: title })
@@ -94,15 +98,11 @@ async function read_mail() {
   try {
     const emails = await readMails();
     if (!emails.length) {
-      console.log("No emails from others.");
+      // console.log("No emails from others.");
       return [];
     }
-
     return emails.map((email) => {
-      // console.log("Date", email.Date);
-      // console.log("From:", email.From);
-      // console.log("Sender Subject:", email.Subject);
-      const attachments = saveAttachments(email.Attachments);
+    const attachments = saveAttachments(email.Attachments);
 
       return {
         Date: email.Date,
@@ -112,7 +112,7 @@ async function read_mail() {
       };
     });
   } catch (error) {
-    console.error(error);
+    // console.error(error);
     return [];
   }
 }
@@ -124,13 +124,9 @@ exports.login = async (req, res, next) => {
   try {
     const data = req.body;
     const { Username, password } = data;
-    console.log(Username, password)
-    await client.connect();
-    await client.db('portfolio').command({ ping: 1 });
-    console.log("success full connect");
-    const db = client.db('portfolio');
-    const coll = db.collection('user');
-    const result = await coll.findOne({ email: Username.trim() });
+    // console.log(Username, password)
+     const clientData=await monodbclient()
+    const result = await clientData.findOne({ email: Username.trim() });
     if (!result) {
       return res.render("pages/signin", { title: "Signin", error: "Invalid Username" })
     }
@@ -149,13 +145,9 @@ exports.login = async (req, res, next) => {
 exports.lead_details = async (req, res, next) => {
   try {
     const objectid = ObjectId.createFromHexString(req.query.id);
-    console.log('object id ',objectid)
-    await client.connect();
-    await client.db('portfolio').command({ ping: 1 });
-    console.log("success full connected")
-    const db = client.db("portfolio");
-    const mycoll = db.collection('user');
-    const user = await mycoll.findOne({ _id: objectid });
+    // console.log('object id ',objectid)
+    const clientData=await monodbclient()
+    const user = await clientData.findOne({ _id: objectid });
     if (!user) {
       return res.status(404).send("User not found");
     }
@@ -172,11 +164,11 @@ exports.lead_details = async (req, res, next) => {
 
     // console.log(senderSubject);
     if (senderSubject.length > 0) {
-      await mycoll.updateOne({ _id: objectid }, { $addToSet: { followup: { $each: senderSubject } } }, { $upsert: true })
+      await clientData.updateOne({ _id: objectid }, { $addToSet: { followup: { $each: senderSubject } } }, { $upsert: true })
     }
 
-    const result = await mycoll.findOne({ _id: objectid });
-    console.log('object result', result)
+    const result = await clientData.findOne({ _id: objectid });
+    // console.log('object result', result)
     // console.log('mail_data', senderSubject)
     return res.render('pages/lead-details', { title: "lead-details", data: result });
   } catch (next) {
@@ -186,16 +178,12 @@ exports.lead_details = async (req, res, next) => {
 // add button to add table data
 exports.add = async (req, res, next) => {
   try {
-    console.log('add works')
+    // console.log('add works')
     const data = req.body;
     const objectid = ObjectId.createFromHexString(data.id);
-    await client.connect();
-    await client.db('portfolio').command({ ping: 1 });
-    console.log("success full connected")
-    const db = client.db("portfolio");
-    mycoll = db.collection('user');
-    const dataupdate = await mycoll.updateOne({ _id: objectid }, { $push: { followup: data } }, { $upsert: true });
-    console.log(dataupdate);
+    const clientData=await monodbclient()
+    const dataupdate = await clientData.updateOne({ _id: objectid }, { $push: { followup: data } }, { $upsert: true });
+    // console.log(dataupdate);
     return res.redirect(`/lead-details?id=${objectid}`);
   } catch (error) {
     next(error)
